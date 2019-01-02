@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: seartipy/pf
+      - image: iqbaltabrez/pf
     steps:
       - checkout
       - run: chown -R myuser:myuser ./*
