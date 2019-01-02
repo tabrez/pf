@@ -5,4 +5,5 @@ jobs:
       - image: seartipy/pf
     steps:
       - checkout
+      - run: chown -R myuser:myuser ./*
       - run: pytest
