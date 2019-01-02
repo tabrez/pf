@@ -7,32 +7,45 @@ LAKH = 100000.00
 CRORE = 10000000.00
 THOUSAND = 1000.00
 
-def num_to_currency(num, letters=True):
-    if num > CRORE:
-        return str(locale.currency(num / CRORE, grouping=True)) + 'Cr'
-    elif num > LAKH:
-        return str(locale.currency(num / LAKH, grouping=True)) + 'L'
-    elif num > THOUSAND:
-        return str(locale.currency(num / THOUSAND, grouping=True)) + 'K'
-    return locale.currency(num, grouping=True)
+def num_to_currency(num, add_letters=True):
+    def format(mark, letters):
+        print(mark)
+        v = str(locale.currency(num / mark, grouping=True))
+        if add_letters:
+            print(letters)
+            return v + letters
+        return v
 
-def future_values(monthly=1000, rate=0.10, start=5, end=41, step=5, init=0, r=2):
-  periods = np.array([iter * 12 for iter in range(start, end, step)])
+    if abs(num) > CRORE:
+        return format(CRORE, 'Cr')
+    elif abs(num) > LAKH:
+        return format(LAKH, 'L')
+    elif abs(num) > THOUSAND:
+        return format(THOUSAND, 'K')
+    return format(1, '')
+
+def make_periods(start=5, end=41, step=5):
+    return np.array([v * 12 for v in range(start, end, step)])
+
+def make_df(col1, col2, headers):
+    data = np.stack((col1, col2), axis=-1)
+    return pd.DataFrame(data, columns=headers)
+
+def to_currency_fmt(num):
+    return list(map(num_to_currency, num))
+
+def future_values(monthly, periods, rate=0.10, init=0, r=2):
   final_amount = np.round(np.fv(rate/12,
                                 periods,
                                 -1 * monthly,
                                 init,
                                 when='begin'), r)
-  final_amount_str = list(map(num_to_currency, final_amount))
-
-  return np.stack((periods/12,
-                   final_amount_str), axis=-1)
+  return to_currency_fmt(final_amount)
 
 def try_future_values(monthly=1000):
-    data = future_values(monthly)
-    headers = ['Years',
-               'Final Amount']
-    return pd.DataFrame(data, columns=headers)
+    periods = make_periods(5, 41, 5)
+    values = future_values(monthly, periods)
+    return make_df(periods/12, values, ['Years', 'Final Amount'])
 
 def future_values_diff_rates(monthly,
                              rates,
