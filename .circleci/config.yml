@@ -1,0 +1,8 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: seartipy/pf
+    steps:
+      - checkout
+      - run: pytest

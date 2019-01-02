@@ -1,0 +1,36 @@
+FROM continuumio/miniconda3:latest
+
+RUN conda update -n base -c defaults conda
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_IN.UTF-8 UTF-8/' /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=en_IN.UTF-8 && rm -rf /var/lib/apt/lists/*
+ENV LANG en_IN.UTF-8
+
+# Add the user that will run the app (no need to run as root)
+RUN groupadd -r myuser && useradd -r -g myuser myuser
+
+WORKDIR /app
+
+# Install myapp requirements
+COPY environment.yml /app/environment.yml
+RUN conda config --add channels conda-forge \
+    && conda env create -n myenv -f environment.yml \
+    && rm -rf /opt/conda/pkgs/*
+
+# Install myapp
+COPY . /app/
+RUN chown -R myuser:myuser /app/*
+
+# activate the myapp environment
+ENV PATH /opt/conda/envs/myenv/bin:$PATH
+
+#CMD ["pytest"]
+
+# Set the locale
+# RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_IN.UTF-8 UTF-8/' /etc/locale.gen && \
+#     locale-gen
+# ENV LANG en_IN.UTF-8
+# ENV LANGUAGE en_IN:en
+# ENV LC_ALL en_IN.UTF-8
